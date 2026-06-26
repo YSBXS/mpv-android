@@ -47,9 +47,10 @@ jobs:
           CACHE_MODE: "folder"
           CACHE_FOLDER: "${{ github.workspace }}/gh-cache"
 
-      - name: Build
+      - name: Build mpv & assemble AAR
         run: |
           buildscripts/include/ci.sh build
+          ./gradlew :app:assembleRelease
 
       - uses: actions/upload-artifact@v7
         with:
@@ -58,3 +59,4 @@ jobs:
             app/src/main/libs/**
             app/build/outputs/apk/default/debug/*.apk
             app/build/outputs/apk/default/release/*.apk
+            app/build/outputs/aar/*.aar
