@@ -49,16 +49,19 @@ jobs:
           CACHE_FOLDER: "${{ github.workspace }}/gh-cache"
 
       - name: Build mpv
-        run: |
-          buildscripts/include/ci.sh build
+        run: buildscripts/include/ci.sh build
 
-      - name: Force build AAR
+      # 关键修复：先 clean + 强制 library 模式 + 关闭签名 + 只打 aar
+      - name: Build AAR (no APK, no signature)
         run: |
-          echo 'apply plugin: "com.android.library"' >> app/temp.gradle
-          ./gradlew :app:assembleRelease -b app/build.gradle
+          ./gradlew clean
+          # 临时修改 app 模块为 library，移除 applicationId，关闭签名
+          sed -i 's/id.\+application/id "com.android.library"/' app/build.gradle
+          sed -i '/applicationId/d' app/build.gradle
+          # 构建 release aar，跳过签名
+          ./gradlew :app:assembleRelease -Pandroid.injected.signing.store.file= -Pandroid.injected.signing.store.password= -Pandroid.injected.signing.key.alias= -Pandroid.injected.signing.key.password=
 
       - uses: actions/upload-artifact@v7
         with:
-          name: mpv-android-fongmi
-          path: |
-            app/build/outputs/aar/app-release.aar
+          name: mpv-android-fongmi-aar
+          path: app/build/outputs/aar/app-release.aar
